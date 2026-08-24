@@ -11,13 +11,21 @@ import { formatMoney } from "@/lib/format";
 import { Donation, DonorSummary, PaymentMethod } from "@/lib/types";
 
 const paymentMethods: PaymentMethod[] = ["Cash", "Bank transfer", "Mobile money", "Cheque", "In-kind"];
-const purposes = ["Unrestricted", "Roof repair fund", "Youth ministry", "Building fund"];
+const purposes = [
+  "Unrestricted",
+  "Roof repair fund",
+  "Youth ministry",
+  "Building fund",
+  "Medical",
+  "Food",
+  "Tuition",
+];
 
 export default function DonationForm({
   onSaved,
   onClose,
 }: {
-  onSaved: (donation: Donation, donorName: string) => void;
+  onSaved: (donation: Donation, donor: DonorSummary) => void;
   onClose: () => void;
 }) {
   const supabaseRef = useRef(createClient());
@@ -30,6 +38,17 @@ export default function DonationForm({
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<PaymentMethod>("Cash");
   const [purpose, setPurpose] = useState(purposes[0]);
+  const [showOtherPurpose, setShowOtherPurpose] = useState(false);
+
+  function selectPurpose(p: string) {
+    setShowOtherPurpose(false);
+    setPurpose(p);
+  }
+
+  function selectOtherPurpose() {
+    setShowOtherPurpose(true);
+    setPurpose("");
+  }
 
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
@@ -79,7 +98,12 @@ export default function DonationForm({
     setReceiptPreview(null);
   }
 
-  const canSubmit = donorId !== "" && amount !== "" && Number(amount) > 0 && !submitting;
+  const canSubmit =
+    donorId !== "" &&
+    amount !== "" &&
+    Number(amount) > 0 &&
+    (!showOtherPurpose || purpose.trim() !== "") &&
+    !submitting;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -97,13 +121,13 @@ export default function DonationForm({
         amount: Number(amount),
         currency: "ETB",
         paymentMethod: method,
-        purpose,
+        purpose: purpose.trim(),
         receiptImageUrl,
         pledgeId: applyToPledge && selectedPledge ? selectedPledge.id : undefined,
       });
       setResult(donation);
       setResultDonorName(selectedDonor.name);
-      onSaved(donation, selectedDonor.name);
+      onSaved(donation, selectedDonor);
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : "Could not save gift.");
     } finally {
@@ -154,8 +178,7 @@ export default function DonationForm({
             className="mt-0.5 h-4 w-4 shrink-0 accent-ink"
           />
           <span className="text-[13px] text-ink-soft">
-            Apply to their {selectedPledge.frequency.toLowerCase()} pledge —{" "}
-            {formatMoney(selectedPledge.totalAmount, selectedPledge.currency)} total, next due{" "}
+            Apply to their pledge — {formatMoney(selectedPledge.totalAmount, selectedPledge.currency)} total, due{" "}
             {selectedPledge.nextDueDate ?? "—"}
           </span>
         </label>
@@ -201,15 +224,36 @@ export default function DonationForm({
             <button
               type="button"
               key={p}
-              onClick={() => setPurpose(p)}
+              onClick={() => selectPurpose(p)}
               className={`rounded-full border px-3.5 py-2 text-[13px] ${
-                purpose === p ? "border-accent bg-accent text-ink" : "border-rule-strong text-ink-soft"
+                purpose === p && !showOtherPurpose
+                  ? "border-accent bg-accent text-ink"
+                  : "border-rule-strong text-ink-soft"
               }`}
             >
               {p}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={selectOtherPurpose}
+            className={`rounded-full border px-3.5 py-2 text-[13px] ${
+              showOtherPurpose ? "border-accent bg-accent text-ink" : "border-rule-strong text-ink-soft"
+            }`}
+          >
+            Other
+          </button>
         </div>
+        {showOtherPurpose && (
+          <input
+            type="text"
+            autoFocus
+            value={purpose}
+            onChange={(e) => setPurpose(e.target.value)}
+            placeholder="Describe the purpose"
+            className="mt-2 w-full rounded-2xl border border-rule bg-paper-raised px-4 py-3 text-[14px] text-ink outline-none placeholder:text-muted"
+          />
+        )}
       </div>
 
       <div>

@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { Donor } from "@/lib/types";
 
 const DETAIL_COLUMNS =
-  "id, name, donor_type, phone, email, address, category, status, notes, date_added, contact_person_name, registration_id";
+  "id, name, donor_type, phone, email, address, category, status, notes, date_added, contact_person_name, registration_id, location";
 
 export async function fetchDonorDetail(supabase: SupabaseClient, id: string): Promise<Donor | null> {
   const { data, error } = await supabase.from("donors").select(DETAIL_COLUMNS).eq("id", id).maybeSingle();
@@ -22,5 +22,6 @@ export async function fetchDonorDetail(supabase: SupabaseClient, id: string): Pr
     dateAdded: data.date_added,
     contactPersonName: data.contact_person_name ?? undefined,
     registrationId: data.registration_id ?? undefined,
+    location: data.location,
   };
 }

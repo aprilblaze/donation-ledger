@@ -11,7 +11,7 @@ import DonationForm from "@/components/DonationForm";
 import { createClient } from "@/lib/supabase/client";
 import { DonationListItem, DonationSort, fetchDonationsPage } from "@/lib/data/donations";
 import { formatMoney } from "@/lib/format";
-import { Donation, DonationStatus } from "@/lib/types";
+import { Donation, DonationStatus, DonorCategory, DonorSummary } from "@/lib/types";
 
 const PAGE_SIZE = 30;
 
@@ -21,6 +21,16 @@ const sortOptions: { value: DonationSort; label: string }[] = [
   { value: "amount_desc", label: "Amount: high–low" },
   { value: "amount_asc", label: "Amount: low–high" },
   { value: "donor_asc", label: "Donor A–Z" },
+];
+
+const ALL_CATEGORIES = "All";
+type CategoryFilter = DonorCategory | typeof ALL_CATEGORIES;
+const categoryFilterOptions: CategoryFilter[] = [
+  ALL_CATEGORIES,
+  "Major donor",
+  "Recurring",
+  "One-time",
+  "In-kind",
 ];
 
 const statusTone: Record<DonationStatus, "positive" | "muted" | "warning"> = {
@@ -37,36 +47,47 @@ export default function DonationsPage() {
   const [modalOpen, setModalOpen] = useState(false);
 
   const [sort, setSort] = useState<DonationSort>("date_desc");
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>(ALL_CATEGORIES);
   const [donations, setDonations] = useState<DonationListItem[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  // Which sort the currently-rendered `donations` were loaded for. Only ever
-  // updated from the async continuation below (after the fetch resolves),
-  // so comparing it to `sort` during render derives the "loading" state
-  // without a synchronous setState inside an effect.
-  const [loadedSort, setLoadedSort] = useState<DonationSort | null>(null);
+  // Which sort+filter combo the currently-rendered `donations` were loaded
+  // for. Only ever updated from the async continuation below (after the
+  // fetch resolves), so comparing it to the current combo during render
+  // derives the "loading" state without a synchronous setState inside an
+  // effect.
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const currentKey = `${sort}|${categoryFilter}`;
 
-  const isLoadingList = loadedSort !== sort;
+  const isLoadingList = loadedKey !== currentKey;
 
-  const loadPage = useCallback(async (activeSort: DonationSort, offset: number, replace: boolean) => {
-    const requestId = ++requestIdRef.current;
-    const rows = await fetchDonationsPage(supabaseRef.current, { sort: activeSort, offset, limit: PAGE_SIZE });
-    if (requestId !== requestIdRef.current) return;
-    setDonations((prev) => (replace ? rows : [...prev, ...rows]));
-    setHasMore(rows.length === PAGE_SIZE);
-    setLoadedSort(activeSort);
-    setLoadingMore(false);
-  }, []);
+  const loadPage = useCallback(
+    async (activeSort: DonationSort, activeCategory: CategoryFilter, offset: number, replace: boolean) => {
+      const requestId = ++requestIdRef.current;
+      const rows = await fetchDonationsPage(supabaseRef.current, {
+        sort: activeSort,
+        donorCategory: activeCategory === ALL_CATEGORIES ? undefined : activeCategory,
+        offset,
+        limit: PAGE_SIZE,
+      });
+      if (requestId !== requestIdRef.current) return;
+      setDonations((prev) => (replace ? rows : [...prev, ...rows]));
+      setHasMore(rows.length === PAGE_SIZE);
+      setLoadedKey(`${activeSort}|${activeCategory}`);
+      setLoadingMore(false);
+    },
+    []
+  );
 
   useEffect(() => {
-    loadPage(sort, 0, true);
-  }, [sort, loadPage]);
+    loadPage(sort, categoryFilter, 0, true);
+  }, [sort, categoryFilter, loadPage]);
 
   const loadMore = useCallback(() => {
     if (loadingMore || isLoadingList || !hasMore) return;
     setLoadingMore(true);
-    loadPage(sort, donations.length, false);
-  }, [loadingMore, isLoadingList, hasMore, sort, donations.length, loadPage]);
+    loadPage(sort, categoryFilter, donations.length, false);
+  }, [loadingMore, isLoadingList, hasMore, sort, categoryFilter, donations.length, loadPage]);
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -81,11 +102,12 @@ export default function DonationsPage() {
 
   const isEmpty = !isLoadingList && donations.length === 0;
 
-  function handleSaved(donation: Donation, donorName: string) {
+  function handleSaved(donation: Donation, donor: DonorSummary) {
     const item: DonationListItem = {
       id: donation.id,
       donorId: donation.donorId,
-      donorName,
+      donorName: donor.name,
+      donorCategory: donor.category,
       dateReceived: donation.dateReceived,
       amount: donation.amount,
       currency: donation.currency,
@@ -94,6 +116,7 @@ export default function DonationsPage() {
       status: donation.status,
       receiptImageUrl: donation.receiptImageUrl,
     };
+    if (categoryFilter !== ALL_CATEGORIES && item.donorCategory !== categoryFilter) return;
     setDonations((prev) => [item, ...prev]);
   }
 
@@ -124,6 +147,19 @@ export default function DonationsPage() {
               }`}
             >
               {opt.label}
+            </button>
+          ))}
+        </div>
+        <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+          {categoryFilterOptions.map((c) => (
+            <button
+              key={c}
+              onClick={() => setCategoryFilter(c)}
+              className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[12px] font-medium ${
+                categoryFilter === c ? "border-accent bg-accent text-ink" : "border-rule-strong text-ink-soft"
+              }`}
+            >
+              {c}
             </button>
           ))}
         </div>
@@ -193,7 +229,10 @@ export default function DonationsPage() {
                           className="h-7 w-7 shrink-0 rounded-md border border-rule object-cover"
                         />
                       )}
-                      {d.donorName}
+                      <div className="min-w-0">
+                        <p className="truncate">{d.donorName}</p>
+                        <p className="text-[12px] text-muted">{d.donorCategory}</p>
+                      </div>
                     </div>
                   </td>
                   <td className="tnum px-4 py-3 text-right text-accent">{formatMoney(d.amount, d.currency)}</td>

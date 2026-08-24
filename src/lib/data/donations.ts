@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { completePledgeReminder } from "@/lib/data/pledge-reminders";
-import { Donation, DonationStatus, PaymentMethod } from "@/lib/types";
+import { Donation, DonationStatus, DonorCategory, PaymentMethod } from "@/lib/types";
 
 const DONATION_COLUMNS =
   "id, donor_id, date_received, amount, currency, payment_method, purpose, type, pledge_id, receipt_number, status, receipt_image_url";
@@ -73,6 +73,7 @@ export type DonationListItem = {
   id: string;
   donorId: string;
   donorName: string;
+  donorCategory: DonorCategory;
   dateReceived: string;
   amount: number;
   currency: string;
@@ -85,13 +86,22 @@ export type DonationListItem = {
 // `!inner` is required so `.order(..., { referencedTable: "donors" })` below
 // actually affects row order (donor_id is not-null, so no rows are dropped).
 const LIST_COLUMNS =
-  "id, donor_id, date_received, amount, currency, payment_method, purpose, status, receipt_image_url, donors!inner(name)";
+  "id, donor_id, date_received, amount, currency, payment_method, purpose, status, receipt_image_url, donors!inner(name, category)";
 
 export async function fetchDonationsPage(
   supabase: SupabaseClient,
-  { sort, offset, limit = 30 }: { sort: DonationSort; offset: number; limit?: number }
+  {
+    sort,
+    donorCategory,
+    offset,
+    limit = 30,
+  }: { sort: DonationSort; donorCategory?: DonorCategory; offset: number; limit?: number }
 ): Promise<DonationListItem[]> {
   let query = supabase.from("donations").select(LIST_COLUMNS);
+
+  if (donorCategory) {
+    query = query.eq("donors.category", donorCategory);
+  }
 
   switch (sort) {
     case "date_desc":
@@ -125,13 +135,14 @@ export async function fetchDonationsPage(
       purpose: string;
       status: DonationStatus;
       receipt_image_url: string | null;
-      donors: { name: string } | { name: string }[] | null;
+      donors: { name: string; category: DonorCategory } | { name: string; category: DonorCategory }[] | null;
     };
     const donor = Array.isArray(r.donors) ? r.donors[0] : r.donors;
     return {
       id: r.id,
       donorId: r.donor_id,
       donorName: donor?.name ?? "Unknown donor",
+      donorCategory: donor?.category ?? "One-time",
       dateReceived: r.date_received,
       amount: Number(r.amount),
       currency: r.currency,

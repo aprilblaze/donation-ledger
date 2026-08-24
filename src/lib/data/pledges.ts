@@ -1,20 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ensurePledgeReminder } from "@/lib/data/pledge-reminders";
-import { PledgeFrequency } from "@/lib/types";
 
 export type PledgeProgress = {
   id: string;
   donorId: string;
   totalAmount: number;
   currency: string;
-  frequency: PledgeFrequency;
   nextDueDate?: string;
   amountReceived: number;
 };
 
 export type PledgeWithDonor = PledgeProgress & { donorName: string };
 
-const PROGRESS_COLUMNS = "pledge_id, donor_id, total_amount, currency, frequency, next_due_date, amount_received";
+const PROGRESS_COLUMNS = "pledge_id, donor_id, total_amount, currency, next_due_date, amount_received";
 
 function mapProgress(row: Record<string, unknown>): PledgeProgress {
   return {
@@ -22,7 +20,6 @@ function mapProgress(row: Record<string, unknown>): PledgeProgress {
     donorId: row.donor_id as string,
     totalAmount: Number(row.total_amount),
     currency: row.currency as string,
-    frequency: row.frequency as PledgeFrequency,
     nextDueDate: (row.next_due_date as string | null) ?? undefined,
     amountReceived: Number(row.amount_received),
   };
@@ -55,15 +52,20 @@ export async function fetchPledgeForDonor(supabase: SupabaseClient, donorId: str
   return mapProgress(data);
 }
 
+/**
+ * Pledges are kept simple: donor, amount, due date. Under the hood the
+ * pledges table still has `frequency`/`start_date` columns (avoids a
+ * destructive migration) — every pledge created here is just stored as a
+ * one-off with today's start date, so the recurring-reminder chaining in
+ * pledge-reminders.ts naturally never fires for it.
+ */
 export async function insertPledge(
   supabase: SupabaseClient,
   input: {
     donorId: string;
     donorName: string;
     totalAmount: number;
-    frequency: PledgeFrequency;
-    startDate: string;
-    nextDueDate?: string;
+    dueDate: string;
   }
 ): Promise<PledgeWithDonor> {
   const currency = "ETB";
@@ -73,9 +75,9 @@ export async function insertPledge(
       donor_id: input.donorId,
       total_amount: input.totalAmount,
       currency,
-      frequency: input.frequency,
-      start_date: input.startDate,
-      next_due_date: input.nextDueDate ?? null,
+      frequency: "One-time",
+      start_date: new Date().toISOString().slice(0, 10),
+      next_due_date: input.dueDate,
     })
     .select("id")
     .single();
@@ -89,8 +91,7 @@ export async function insertPledge(
     donorName: input.donorName,
     totalAmount: input.totalAmount,
     currency,
-    frequency: input.frequency,
-    nextDueDate: input.nextDueDate || undefined,
+    nextDueDate: input.dueDate,
     amountReceived: 0,
   };
 }

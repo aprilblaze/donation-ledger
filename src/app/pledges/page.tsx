@@ -32,9 +32,7 @@ export default function PledgesPage() {
         donorId: values.donor.id,
         donorName: values.donor.name,
         totalAmount: values.totalAmount,
-        frequency: values.frequency,
-        startDate: values.startDate,
-        nextDueDate: values.nextDueDate || undefined,
+        dueDate: values.dueDate,
       });
       setPledges((prev) => [pledge, ...(prev ?? [])]);
       setModalOpen(false);
@@ -113,9 +111,7 @@ export default function PledgesPage() {
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-rule">
                   <div className="h-full rounded-full bg-accent" style={{ width: `${pct}%` }} />
                 </div>
-                <p className="mt-2.5 text-[13px] text-ink-soft">
-                  {p.frequency} · next due {p.nextDueDate ?? "—"}
-                </p>
+                <p className="mt-2.5 text-[13px] text-ink-soft">Due {p.nextDueDate ?? "—"}</p>
               </Link>
             </div>
           );

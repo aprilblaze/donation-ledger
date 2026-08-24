@@ -14,7 +14,8 @@ create table donors (
   date_added date not null default current_date,
   -- Organization/Government/Foundation/Church only — left null for Individual donors.
   contact_person_name text,
-  registration_id text
+  registration_id text,
+  location text not null default 'Local' check (location in ('Local','Abroad'))
 );
 
 create table pledges (
@@ -122,6 +123,7 @@ alter table donors add column if not exists registration_id text;
 alter table donations add column if not exists receipt_image_url text;
 alter table reminders add column if not exists pledge_id uuid references pledges(id) on delete cascade;
 alter table pledges add column if not exists status text not null default 'Active' check (status in ('Active','Completed'));
+alter table donors add column if not exists location text not null default 'Local' check (location in ('Local','Abroad'));
 
 create sequence if not exists donations_receipt_seq start 1044;
 alter table donations alter column receipt_number set default ('RC-' || nextval('donations_receipt_seq'));

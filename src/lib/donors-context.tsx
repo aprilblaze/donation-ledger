@@ -2,15 +2,16 @@
 
 import { createContext, useCallback, useContext, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { DonorCategory, DonorSummary, DonorType } from "@/lib/types";
+import { DonorCategory, DonorLocation, DonorSummary, DonorType } from "@/lib/types";
 
 const PAGE_SIZE = 50;
-const SUMMARY_COLUMNS = "id, name, donor_type, category, status";
+const SUMMARY_COLUMNS = "id, name, donor_type, category, status, location";
 
 export type NewDonorInput = {
   name: string;
   donorType: DonorType;
   category: DonorCategory;
+  location: DonorLocation;
   phone?: string;
   email?: string;
   notes?: string;
@@ -40,6 +41,7 @@ function mapRow(row: Record<string, unknown>): DonorSummary {
     donorType: row.donor_type as DonorType,
     category: row.category as DonorCategory,
     status: row.status as DonorSummary["status"],
+    location: row.location as DonorLocation,
   };
 }
 
@@ -116,6 +118,7 @@ export function DonorsProvider({ children }: { children: React.ReactNode }) {
         name: input.name,
         donor_type: input.donorType,
         category: input.category,
+        location: input.location,
         phone: input.phone ?? null,
         email: input.email ?? null,
         notes: input.notes ?? null,

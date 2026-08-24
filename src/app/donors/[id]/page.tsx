@@ -62,7 +62,7 @@ export default function DonorDetail() {
           <div>
             <h1 className="font-display text-[26px] leading-tight text-ink">{donor.name}</h1>
             <p className="mt-1 text-[13px] text-muted">
-              {donor.donorType} · {donor.category}
+              {donor.donorType} · {donor.category} · {donor.location}
             </p>
             {needsOrgFields && donor.contactPersonName && (
               <p className="mt-1 text-[13px] text-ink-soft">Contact: {donor.contactPersonName}</p>
@@ -107,9 +107,7 @@ export default function DonorDetail() {
                 style={{ width: `${Math.min(100, (pledge.amountReceived / pledge.totalAmount) * 100)}%` }}
               />
             </div>
-            <p className="mt-2.5 text-[13px] text-ink-soft">
-              {pledge.frequency} · next due {pledge.nextDueDate}
-            </p>
+            <p className="mt-2.5 text-[13px] text-ink-soft">Due {pledge.nextDueDate}</p>
           </div>
         </section>
       )}

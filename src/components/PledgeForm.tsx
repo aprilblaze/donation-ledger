@@ -2,21 +2,32 @@
 
 import { FormEvent, useState } from "react";
 import DonorSelect from "@/components/DonorSelect";
-import { DonorSummary, PledgeFrequency } from "@/lib/types";
-
-const frequencies: PledgeFrequency[] = ["One-time", "Monthly", "Quarterly", "Annual"];
+import { DonorSummary } from "@/lib/types";
 
 export type PledgeFormValues = {
   donor: DonorSummary;
   totalAmount: number;
-  frequency: PledgeFrequency;
-  startDate: string;
-  nextDueDate: string;
+  dueDate: string;
 };
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
+function addDays(days: number) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
 }
+
+function addMonth() {
+  const d = new Date();
+  d.setMonth(d.getMonth() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+const dueDateOptions = [
+  { label: "1 week", date: addDays(7) },
+  { label: "2 weeks", date: addDays(14) },
+  { label: "3 weeks", date: addDays(21) },
+  { label: "1 month", date: addMonth() },
+];
 
 export default function PledgeForm({
   onSubmit,
@@ -28,11 +39,10 @@ export default function PledgeForm({
   const [donorId, setDonorId] = useState("");
   const [donor, setDonor] = useState<DonorSummary | null>(null);
   const [totalAmount, setTotalAmount] = useState("");
-  const [frequency, setFrequency] = useState<PledgeFrequency>("Monthly");
-  const [startDate, setStartDate] = useState(today());
-  const [nextDueDate, setNextDueDate] = useState("");
+  const [dueDate, setDueDate] = useState("");
 
-  const canSubmit = donor !== null && totalAmount !== "" && Number(totalAmount) > 0 && !submitting;
+  const canSubmit =
+    donor !== null && totalAmount !== "" && Number(totalAmount) > 0 && dueDate !== "" && !submitting;
 
   function handleDonorChange(id: string, d: DonorSummary) {
     setDonorId(id);
@@ -42,7 +52,7 @@ export default function PledgeForm({
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!canSubmit || !donor) return;
-    onSubmit({ donor, totalAmount: Number(totalAmount), frequency, startDate, nextDueDate });
+    onSubmit({ donor, totalAmount: Number(totalAmount), dueDate });
   }
 
   return (
@@ -52,7 +62,7 @@ export default function PledgeForm({
         <DonorSelect value={donorId} onChange={handleDonorChange} />
       </div>
 
-      <Field label="Total pledge amount (ETB)">
+      <Field label="Amount (ETB)">
         <input
           type="number"
           inputMode="decimal"
@@ -64,40 +74,28 @@ export default function PledgeForm({
       </Field>
 
       <div>
-        <p className="mb-2 text-[13px] text-muted">Frequency</p>
+        <p className="mb-2 text-[13px] text-muted">Due date</p>
         <div className="flex flex-wrap gap-2">
-          {frequencies.map((f) => (
+          {dueDateOptions.map((opt) => (
             <button
               type="button"
-              key={f}
-              onClick={() => setFrequency(f)}
+              key={opt.label}
+              onClick={() => setDueDate(opt.date)}
               className={`rounded-full border px-3.5 py-2 text-[13px] ${
-                frequency === f ? "border-accent bg-accent text-ink" : "border-rule-strong text-ink-soft"
+                dueDate === opt.date ? "border-accent bg-accent text-ink" : "border-rule-strong text-ink-soft"
               }`}
             >
-              {f}
+              {opt.label}
             </button>
           ))}
         </div>
+        <input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          className="mt-2 w-full rounded-2xl border border-rule bg-paper-raised px-4 py-3.5 text-[16px] text-ink outline-none"
+        />
       </div>
-
-      <Field label="Start date">
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          className="w-full bg-transparent text-[16px] text-ink outline-none"
-        />
-      </Field>
-
-      <Field label="Next due date (optional — schedules a reminder)">
-        <input
-          type="date"
-          value={nextDueDate}
-          onChange={(e) => setNextDueDate(e.target.value)}
-          className="w-full bg-transparent text-[16px] text-ink outline-none"
-        />
-      </Field>
 
       <button
         type="submit"

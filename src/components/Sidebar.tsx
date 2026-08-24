@@ -14,8 +14,13 @@ export default function Sidebar() {
   return (
     <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-rule bg-paper-raised px-4 py-6 md:flex">
       <div className="mb-6 flex items-center gap-2 px-2">
-        <Image src="/logo-mark.svg" alt="" width={50}  height={50} className=" shrink-0" />
-        <p className="font-display text-base leading-tight text-ink">Act of Kindness</p>
+        <Image
+          src="/logo-mark.svg"
+          alt=""
+          width={200}
+          height={200}
+          className=" shrink-0"
+        />
       </div>
       <nav className="flex flex-col gap-1">
         {navItems.map(({ href, label, icon: Icon }) => {
@@ -25,7 +30,9 @@ export default function Sidebar() {
               key={href}
               href={href}
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] ${
-                active ? "bg-accent/10 text-accent" : "text-muted hover:bg-paper"
+                active
+                  ? "bg-accent/10 text-accent"
+                  : "text-muted hover:bg-paper"
               }`}
             >
               <Icon size={18} strokeWidth={active ? 2.25 : 1.5} />

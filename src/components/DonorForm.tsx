@@ -1,15 +1,17 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { DonorCategory, DonorType } from "@/lib/types";
+import { DonorCategory, DonorLocation, DonorType } from "@/lib/types";
 
 const donorTypes: DonorType[] = ["Individual", "Organization", "Government", "Foundation", "Church"];
-const categories: DonorCategory[] = ["Major donor", "Recurring", "One-time", "In-kind"];
+const categories: DonorCategory[] = ["Recurring", "One-time", "In-kind"];
+const locations: DonorLocation[] = ["Local", "Abroad"];
 
 export type DonorFormValues = {
   name: string;
   donorType: DonorType;
   category: DonorCategory;
+  location: DonorLocation;
   phone: string;
   email: string;
   notes: string;
@@ -21,6 +23,7 @@ const emptyValues: DonorFormValues = {
   name: "",
   donorType: "Individual",
   category: "One-time",
+  location: "Local",
   phone: "",
   email: "",
   notes: "",
@@ -93,6 +96,24 @@ export default function DonorForm({
               }`}
             >
               {c}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-2 text-[13px] text-muted">Location</p>
+        <div className="flex flex-wrap gap-2">
+          {locations.map((l) => (
+            <button
+              type="button"
+              key={l}
+              onClick={() => update("location", l)}
+              className={`rounded-full border px-3.5 py-2 text-[13px] ${
+                values.location === l ? "border-accent bg-accent text-ink" : "border-rule-strong text-ink-soft"
+              }`}
+            >
+              {l}
             </button>
           ))}
         </div>

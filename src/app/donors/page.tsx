@@ -69,7 +69,7 @@ export default function DonorsPage() {
               <div className="min-w-0">
                 <p className="truncate font-display text-[16px] text-ink">{d.name}</p>
                 <p className="mt-0.5 text-[12px] text-muted">
-                  {d.donorType} · {d.category}
+                  {d.donorType} · {d.category} · {d.location}
                 </p>
               </div>
               <StatusBadge label={d.status} tone={statusTone[d.status]} />
@@ -90,6 +90,7 @@ export default function DonorsPage() {
                 <th className="px-4 py-3 font-medium">Name</th>
                 <th className="px-4 py-3 font-medium">Type</th>
                 <th className="px-4 py-3 font-medium">Category</th>
+                <th className="px-4 py-3 font-medium">Location</th>
                 <th className="px-4 py-3 font-medium">Status</th>
               </tr>
             </thead>
@@ -107,6 +108,7 @@ export default function DonorsPage() {
                   <td className="px-4 py-3 font-display text-ink">{d.name}</td>
                   <td className="px-4 py-3 text-ink-soft">{d.donorType}</td>
                   <td className="px-4 py-3 text-ink-soft">{d.category}</td>
+                  <td className="px-4 py-3 text-ink-soft">{d.location}</td>
                   <td className="px-4 py-3">
                     <StatusBadge label={d.status} tone={statusTone[d.status]} />
                   </td>

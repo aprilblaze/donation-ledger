@@ -43,6 +43,7 @@ export default function DonorSelect({
         name: values.name.trim(),
         donorType: values.donorType,
         category: values.category,
+        location: values.location,
         phone: values.phone.trim() || undefined,
         email: values.email.trim() || undefined,
         notes: values.notes.trim() || undefined,
