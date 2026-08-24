@@ -4,7 +4,7 @@
 create table donors (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  donor_type text not null check (donor_type in ('Individual','Organization','Government','Foundation','Church')),
+  donor_type text not null check (donor_type in ('Individual','Local Individual','Diaspora Individual','Organization','Government','Foundation','Church')),
   phone text,
   email text,
   address text,
@@ -124,6 +124,13 @@ alter table donations add column if not exists receipt_image_url text;
 alter table reminders add column if not exists pledge_id uuid references pledges(id) on delete cascade;
 alter table pledges add column if not exists status text not null default 'Active' check (status in ('Active','Completed'));
 alter table donors add column if not exists location text not null default 'Local' check (location in ('Local','Abroad'));
+
+-- Widens donor_type to add Local/Diaspora Individual (the app now uses these
+-- instead of plain 'Individual' going forward; 'Individual' stays valid so
+-- existing rows aren't affected).
+alter table donors drop constraint if exists donors_donor_type_check;
+alter table donors add constraint donors_donor_type_check
+  check (donor_type in ('Individual','Local Individual','Diaspora Individual','Organization','Government','Foundation','Church'));
 
 create sequence if not exists donations_receipt_seq start 1044;
 alter table donations alter column receipt_number set default ('RC-' || nextval('donations_receipt_seq'));

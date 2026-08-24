@@ -42,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="font-sans">
       <body
         className={`${fraunces.variable} ${inter.variable} ${plexMono.variable} antialiased`}
       >

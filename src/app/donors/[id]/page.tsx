@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ChevronLeft, Mail, Phone } from "lucide-react";
+import { ChevronLeft, Mail, MapPin, Phone } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import { createClient } from "@/lib/supabase/client";
 import { fetchDonorDetail } from "@/lib/data/donors";
 import { fetchDonationsForDonor } from "@/lib/data/donations";
 import { fetchPledgeForDonor, PledgeProgress } from "@/lib/data/pledges";
 import { formatMoney } from "@/lib/format";
-import { Donation, Donor, DonorStatus } from "@/lib/types";
+import { Donation, Donor, DonorStatus, isIndividualDonorType } from "@/lib/types";
 
 const statusTone: Record<DonorStatus, "positive" | "muted" | "warning"> = {
   Active: "positive",
@@ -49,7 +49,7 @@ export default function DonorDetail() {
     );
   }
 
-  const needsOrgFields = donor.donorType !== "Individual";
+  const needsOrgFields = !isIndividualDonorType(donor.donorType);
   const lifetimeTotal = gifts.reduce((sum, g) => sum + g.amount, 0);
 
   return (
@@ -62,7 +62,7 @@ export default function DonorDetail() {
           <div>
             <h1 className="font-display text-[26px] leading-tight text-ink">{donor.name}</h1>
             <p className="mt-1 text-[13px] text-muted">
-              {donor.donorType} · {donor.category} · {donor.location}
+              {donor.donorType} · {donor.category}
             </p>
             {needsOrgFields && donor.contactPersonName && (
               <p className="mt-1 text-[13px] text-ink-soft">Contact: {donor.contactPersonName}</p>
@@ -81,6 +81,11 @@ export default function DonorDetail() {
             <a href={`mailto:${donor.email}`} className="flex items-center gap-2 text-[14px] text-ink-soft">
               <Mail size={14} className="text-muted" /> {donor.email}
             </a>
+          )}
+          {donor.address && (
+            <p className="flex items-center gap-2 text-[14px] text-ink-soft">
+              <MapPin size={14} className="text-muted" /> {donor.address}
+            </p>
           )}
           {needsOrgFields && donor.registrationId && (
             <p className="text-[13px] text-muted">Reg/Tax ID: {donor.registrationId}</p>

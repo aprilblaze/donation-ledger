@@ -1,7 +1,19 @@
-export type DonorType = "Individual" | "Organization" | "Government" | "Foundation" | "Church";
+export type DonorType =
+  | "Individual"
+  | "Local Individual"
+  | "Diaspora Individual"
+  | "Organization"
+  | "Government"
+  | "Foundation"
+  | "Church";
 export type DonorCategory = "Major donor" | "Recurring" | "One-time" | "In-kind";
 export type DonorStatus = "Active" | "Lapsed" | "Prospective";
-export type DonorLocation = "Local" | "Abroad";
+
+// "Individual" is legacy (kept so old rows still type-check) — new donors
+// get one of the two more specific variants instead.
+export function isIndividualDonorType(type: DonorType): boolean {
+  return type === "Individual" || type === "Local Individual" || type === "Diaspora Individual";
+}
 
 export type Donor = {
   id: string;
@@ -17,11 +29,10 @@ export type Donor = {
   // Organization/Government/Foundation/Church only — undefined for Individual.
   contactPersonName?: string;
   registrationId?: string;
-  location: DonorLocation;
 };
 
 // Lightweight shape used for the cached donor list (donors list, give flow).
-export type DonorSummary = Pick<Donor, "id" | "name" | "donorType" | "category" | "status" | "location">;
+export type DonorSummary = Pick<Donor, "id" | "name" | "donorType" | "category" | "status">;
 
 export type PaymentMethod = "Cash" | "Bank transfer" | "Mobile money" | "Cheque" | "In-kind";
 export type DonationType = "One-time" | "Pledge installment";

@@ -1,10 +1,18 @@
 "use client";
 
-import { ChangeEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "@/components/Modal";
 import DonorForm, { DonorFormValues } from "@/components/DonorForm";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useDonors } from "@/lib/donors-context";
-import { DonorSummary } from "@/lib/types";
+import { DonorSummary, isIndividualDonorType } from "@/lib/types";
 
 const ADD_DONOR_VALUE = "__add_donor__";
 
@@ -25,31 +33,30 @@ export default function DonorSelect({
     ensureLoaded();
   }, [ensureLoaded]);
 
-  function handleChange(e: ChangeEvent<HTMLSelectElement>) {
-    const val = e.target.value;
+  function handleValueChange(val: string | null) {
     if (val === ADD_DONOR_VALUE) {
       setAddDonorOpen(true);
       return;
     }
     const donor = donors.find((d) => d.id === val);
-    if (donor) onChange(val, donor);
+    if (donor) onChange(donor.id, donor);
   }
 
   async function handleAddDonor(values: DonorFormValues) {
     setDonorFormSubmitting(true);
     setDonorFormError(null);
     try {
+      const isIndividual = isIndividualDonorType(values.donorType);
       const donor = await addDonor({
         name: values.name.trim(),
         donorType: values.donorType,
         category: values.category,
-        location: values.location,
+        address: values.address.trim() || undefined,
         phone: values.phone.trim() || undefined,
         email: values.email.trim() || undefined,
         notes: values.notes.trim() || undefined,
-        contactPersonName:
-          values.donorType === "Individual" ? undefined : values.contactPersonName.trim() || undefined,
-        registrationId: values.donorType === "Individual" ? undefined : values.registrationId.trim() || undefined,
+        contactPersonName: isIndividual ? undefined : values.contactPersonName.trim() || undefined,
+        registrationId: isIndividual ? undefined : values.registrationId.trim() || undefined,
       });
       onChange(donor.id, donor);
       setAddDonorOpen(false);
@@ -62,23 +69,20 @@ export default function DonorSelect({
 
   return (
     <>
-      <div className="rounded-2xl border border-rule bg-paper-raised px-4 py-3.5">
-        <select
-          value={value}
-          onChange={handleChange}
-          className="w-full bg-transparent text-[16px] text-ink outline-none"
-        >
-          <option value="" disabled>
-            Select a donor…
-          </option>
+      <Select value={value} onValueChange={handleValueChange}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Select a donor…" />
+        </SelectTrigger>
+        <SelectContent>
           {donors.map((d) => (
-            <option key={d.id} value={d.id}>
+            <SelectItem key={d.id} value={d.id}>
               {d.name}
-            </option>
+            </SelectItem>
           ))}
-          <option value={ADD_DONOR_VALUE}>+ Add new donor…</option>
-        </select>
-      </div>
+          <SelectSeparator />
+          <SelectItem value={ADD_DONOR_VALUE}>+ Add new donor…</SelectItem>
+        </SelectContent>
+      </Select>
 
       <Modal open={addDonorOpen} onClose={() => setAddDonorOpen(false)} title="Add donor">
         {donorFormError && <p className="mb-4 text-[13px] text-negative">{donorFormError}</p>}

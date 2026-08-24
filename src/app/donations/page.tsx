@@ -8,6 +8,7 @@ import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import Modal from "@/components/Modal";
 import DonationForm from "@/components/DonationForm";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
 import { DonationListItem, DonationSort, fetchDonationsPage } from "@/lib/data/donations";
 import { formatMoney } from "@/lib/format";
@@ -23,15 +24,9 @@ const sortOptions: { value: DonationSort; label: string }[] = [
   { value: "donor_asc", label: "Donor A–Z" },
 ];
 
-const ALL_CATEGORIES = "All";
+const ALL_CATEGORIES = "All categories";
 type CategoryFilter = DonorCategory | typeof ALL_CATEGORIES;
-const categoryFilterOptions: CategoryFilter[] = [
-  ALL_CATEGORIES,
-  "Major donor",
-  "Recurring",
-  "One-time",
-  "In-kind",
-];
+const categoryFilterOptions: CategoryFilter[] = [ALL_CATEGORIES, "Recurring", "One-time", "In-kind"];
 
 const statusTone: Record<DonationStatus, "positive" | "muted" | "warning"> = {
   Received: "positive",
@@ -137,7 +132,7 @@ export default function DonationsPage() {
       />
 
       <div className="px-5 pt-4">
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
           {sortOptions.map((opt) => (
             <button
               key={opt.value}
@@ -149,19 +144,18 @@ export default function DonationsPage() {
               {opt.label}
             </button>
           ))}
-        </div>
-        <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-          {categoryFilterOptions.map((c) => (
-            <button
-              key={c}
-              onClick={() => setCategoryFilter(c)}
-              className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[12px] font-medium ${
-                categoryFilter === c ? "border-accent bg-accent text-ink" : "border-rule-strong text-ink-soft"
-              }`}
-            >
-              {c}
-            </button>
-          ))}
+          <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as CategoryFilter)}>
+            <SelectTrigger className="w-auto shrink-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {categoryFilterOptions.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
