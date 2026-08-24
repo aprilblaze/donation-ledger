@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+:root {
+  /* Act of Kindness palette — purple ink & gold accent on warm white */
+  --color-paper: #ffffff;
+  --color-paper-raised: #faf7f0;
+  --color-ink: #4b2264;
+  --color-ink-soft: #6b4e7c;
+  --color-muted: #8a7a94;
+  --color-rule: #e7deee;
+  --color-rule-strong: #d4c2e0;
+  --color-accent: #c9a233;
+  --color-negative: #7a2e26;
+  --color-positive: #2f4a34;
+}
+
+@theme inline {
+  --color-paper: var(--color-paper);
+  --color-paper-raised: var(--color-paper-raised);
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-muted: var(--color-muted);
+  --color-rule: var(--color-rule);
+  --color-rule-strong: var(--color-rule-strong);
+  --color-accent: var(--color-accent);
+  --color-negative: var(--color-negative);
+  --color-positive: var(--color-positive);
+
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-plex-mono);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Tabular figures everywhere money appears */
+.tnum {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Ruled ledger row */
+.ledger-row {
+  border-bottom: 1px solid var(--color-rule);
+}
+.ledger-row:last-child {
+  border-bottom: none;
+}
+
+/* Perforated edge, used on receipt/detail views */
+.perforated {
+  position: relative;
+}
+.perforated::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-image: radial-gradient(circle, var(--color-rule-strong) 1.2px, transparent 1.2px);
+  background-size: 10px 1px;
+  background-repeat: repeat-x;
+}
+
+::selection {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+/* Visible focus ring, keyboard nav */
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
