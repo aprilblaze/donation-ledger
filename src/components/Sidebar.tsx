@@ -15,7 +15,7 @@ export default function Sidebar() {
     <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-rule bg-paper-raised px-4 py-6 md:flex">
       <div className="mb-6 flex items-center gap-2 px-2">
         <Image
-          src="/logo-mark.svg"
+          src="/Asset 23.png"
           alt=""
           width={200}
           height={200}
