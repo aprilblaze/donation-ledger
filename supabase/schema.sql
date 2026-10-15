@@ -65,7 +65,7 @@ create table reminders (
 -- Convenience view: amount received per pledge, plus the fields the UI needs
 -- alongside it so donor detail / pledges pages can do it in a single query.
 -- Only Active pledges are included — Completed ones are archived out of it.
-create view pledge_progress as
+create view pledge_progress with (security_invoker = true) as
   select
     p.id as pledge_id,
     p.donor_id,
@@ -135,7 +135,7 @@ alter table donors add constraint donors_donor_type_check
 create sequence if not exists donations_receipt_seq start 1044;
 alter table donations alter column receipt_number set default ('RC-' || nextval('donations_receipt_seq'));
 
-create or replace view pledge_progress as
+create or replace view pledge_progress with (security_invoker = true) as
   select
     p.id as pledge_id,
     p.donor_id,
